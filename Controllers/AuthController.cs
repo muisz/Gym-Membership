@@ -11,10 +11,12 @@ namespace GymMembership.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ITokenService _tokenService;
 
-        public AuthController(IUserService userService)
+        public AuthController(IUserService userService, ITokenService tokenService)
         {
             _userService = userService;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -45,6 +47,7 @@ namespace GymMembership.Controllers
                     Id = user.Id,
                     Name = user.Name,
                     Email = user.Email,
+                    Token = _tokenService.CreatePair(user),
                 };
                 return Ok(response);
             }

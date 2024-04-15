@@ -16,6 +16,7 @@ builder.Services.AddDbContext<DatabaseContext>(
 
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITokenService, JWTService>();
 
 var app = builder.Build();
 
