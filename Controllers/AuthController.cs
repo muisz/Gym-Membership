@@ -1,4 +1,5 @@
 using GymMembership.Data;
+using GymMembership.Enums;
 using GymMembership.Exceptions;
 using GymMembership.Models;
 using GymMembership.Services;
@@ -12,11 +13,20 @@ namespace GymMembership.Controllers
     {
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
+        private readonly IOTPService _otpService;
+        private readonly IEmailService _emailService;
 
-        public AuthController(IUserService userService, ITokenService tokenService)
+        public AuthController(
+            IUserService userService,
+            ITokenService tokenService,
+            IOTPService otpService,
+            IEmailService emailService
+        )
         {
             _userService = userService;
             _tokenService = tokenService;
+            _otpService = otpService;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -25,6 +35,8 @@ namespace GymMembership.Controllers
             try
             {
                 User user = await _userService.Register(payload.Name, payload.Email, payload.Password);
+                OTP otp = await _otpService.CreateOTP(OTPUsageEnum.EmailVerification, user.Email);
+                await _emailService.SendOTPRegistrationEmail(otp, user);
                 return StatusCode(StatusCodes.Status201Created, new CreatedData{ Id = user.Id });
             }
             catch (HttpException error)

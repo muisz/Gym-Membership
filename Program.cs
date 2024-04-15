@@ -16,7 +16,10 @@ builder.Services.AddDbContext<DatabaseContext>(
 
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IOTPService, OTPService>();
 builder.Services.AddScoped<ITokenService, JWTService>();
+builder.Services.AddScoped<IEmailClient, SMTPEmailClient>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 
