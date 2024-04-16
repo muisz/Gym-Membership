@@ -121,5 +121,27 @@ namespace GymMembership.Controllers
                 return Problem(error.Message, statusCode: error.StatusCode);
             }
         }
+
+        [HttpPost("token/refresh")]
+        public async Task<ActionResult<TokenData>> PostRefreshToken(RequestRefreshTokenData payload)
+        {
+            try
+            {
+                User? user = await _tokenService.ClaimFromRefresh(payload.Token);
+                if (user == null)
+                    throw new HttpException("User not found", StatusCodes.Status404NotFound);
+                
+                TokenData newToken = _tokenService.CreatePair(user);
+                return Ok(newToken);
+            }
+            catch (HttpException error)
+            {
+                return Problem(error.Message, statusCode: error.StatusCode);
+            }
+            catch (Exception)
+            {
+                return Problem("Invalid token", statusCode: StatusCodes.Status400BadRequest);
+            }
+        }
     }
 }
