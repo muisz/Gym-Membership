@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using GymMembership.Data;
 using GymMembership.Exceptions;
 using GymMembership.Models;
@@ -12,10 +14,12 @@ namespace GymMembership.Controllers
     public class PackageController : ControllerBase
     {
         private readonly IPackageService _packageService;
+        private readonly ITokenService _tokenService;
 
-        public PackageController(IPackageService packageService)
+        public PackageController(IPackageService packageService, ITokenService tokenService)
         {
             _packageService = packageService;
+            _tokenService = tokenService;
         }
 
         [HttpGet("")]
@@ -55,6 +59,34 @@ namespace GymMembership.Controllers
                     Price = package.Price,
                     ActiveDays = package.ActiveDays,
                 });
+            }
+            catch (HttpException error)
+            {
+                return Problem(error.Message, statusCode: error.StatusCode);
+            }
+        }
+
+        [HttpGet("my")]
+        [Authorize]
+        public async Task<ActionResult<ICollection<ListMyPackageData>>> GetMyPackages()
+        {
+            try
+            {   
+                int userId = _tokenService.GetUserIdFromClaim(User);
+                ICollection<ListMyPackageData> myPackages = new List<ListMyPackageData>();
+                ICollection<UserPackage> packages = await _packageService.GetPackagesFromUser(userId);
+                foreach (UserPackage package in packages)
+                {
+                    myPackages.Add(new ListMyPackageData
+                    {
+                        Id = package.Id,
+                        Name = package.Package.Name,
+                        Status = package.Status.ToString(),
+                        CreatedAt = package.CreatedAt,
+                        RenewAt = package.RenewAt,
+                    });
+                }
+                return Ok(myPackages);
             }
             catch (HttpException error)
             {

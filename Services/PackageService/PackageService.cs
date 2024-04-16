@@ -21,5 +21,14 @@ namespace GymMembership.Services
         {
             return await _context.Packages.SingleOrDefaultAsync(package => package.Id == id);
         }
+
+        public async Task<ICollection<UserPackage>> GetPackagesFromUser(int id)
+        {
+            return await _context.UserPackages
+                .Where(userPackage => userPackage.UserId == id)
+                .Include(userPackage => userPackage.Package)
+                .OrderByDescending(userPackage => userPackage.Id)
+                .ToListAsync();
+        }
     }
 }

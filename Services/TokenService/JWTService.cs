@@ -39,6 +39,7 @@ namespace GymMembership.Services
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             };
             return CreateToken(claims, accessExpHours, accessKey);
         }
@@ -85,6 +86,12 @@ namespace GymMembership.Services
                 issuer: issuer
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public int GetUserIdFromClaim(ClaimsPrincipal principal)
+        {
+            string claimValue = principal.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)!.Value;
+            return int.Parse(claimValue);
         }
     }
 }

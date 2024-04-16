@@ -8,5 +8,7 @@ namespace GymMembership.Models
         public bool IsActive { get; set; }
         public float Price { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public ICollection<UserPackage> Users { get; } = new List<UserPackage>();
     }
 }
