@@ -50,5 +50,14 @@ namespace GymMembership.Services
         {
             return await _context.Users.SingleOrDefaultAsync(user => user.Email == value.ToLower());
         }
+
+        public async Task VerifyEmail(User user)
+        {
+            if (!user.IsVerified)
+            {
+                user.IsVerified = true;
+            }
+            await _context.SaveChangesAsync();
+        }
     }
 }

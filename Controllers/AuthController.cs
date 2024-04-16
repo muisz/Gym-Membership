@@ -68,5 +68,58 @@ namespace GymMembership.Controllers
                 return Problem(error.Message, statusCode: error.StatusCode);
             }
         }
+
+        [HttpPost("verification/send")]
+        public async Task<ActionResult> PostSendVerification(RequestEmailOTPData payload)
+        {
+            try
+            {
+                User? user = await _userService.GetUserFromEmail(payload.Email);
+                if (user == null)
+                    throw new HttpException("email not found", StatusCodes.Status404NotFound);
+                
+                if (user.IsVerified)
+                    throw new HttpException("email already verified");
+                
+                OTP otp = await _otpService.CreateOTP(OTPUsageEnum.EmailVerification, user.Email);
+                await _emailService.SendOTPRegistrationEmail(otp, user);
+                return Ok();
+            }
+            catch (HttpException error)
+            {
+                return Problem(error.Message, statusCode: error.StatusCode);
+            }
+        }
+
+        [HttpPost("verification/verify")]
+        public async Task<ActionResult<AuthData>> PostVerify(EmailOTPVerificationData payload)
+        {
+            try
+            {
+                OTP? otp = await _otpService.GetOTP(OTPUsageEnum.EmailVerification, payload.Code, payload.Email);
+                if (otp == null)
+                    throw new HttpException("OTP not found", StatusCodes.Status404NotFound);
+                
+                User? user = await _userService.GetUserFromEmail(payload.Email);
+                if (user == null)
+                    throw new HttpException("User not found", StatusCodes.Status404NotFound);
+                
+                await _userService.VerifyEmail(user);
+                await _otpService.Deactivate(otp);
+                
+                AuthData response = new AuthData
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Token = _tokenService.CreatePair(user),
+                };
+                return Ok(response);
+            }
+            catch (HttpException error)
+            {
+                return Problem(error.Message, statusCode: error.StatusCode);
+            }
+        }
     }
 }

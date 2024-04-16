@@ -1,4 +1,5 @@
 using GymMembership.Enums;
+using GymMembership.Exceptions;
 using GymMembership.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,25 @@ namespace GymMembership.Services
                 otp.Usage == usage && otp.Destination == destination && otp.IsActive
             ).ToListAsync();
             otps.ForEach(otp => otp.IsActive = false);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<OTP?> GetOTP(OTPUsageEnum usage, string code, string destination)
+        {
+            return await _context.OTPs.SingleOrDefaultAsync(otp =>
+                otp.Code == code && otp.Destination == destination && otp.IsActive);
+        }
+
+        public Task Verify(OTP otp)
+        {
+            if (otp.ValidUntil < DateTime.Now)
+                throw new HttpException("OTP expired");
+            return Task.CompletedTask;
+        }
+
+        public async Task Deactivate(OTP otp)
+        {
+            otp.IsActive = false;
             await _context.SaveChangesAsync();
         }
     }

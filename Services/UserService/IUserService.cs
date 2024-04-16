@@ -7,5 +7,6 @@ namespace GymMembership.Services
         public Task<User> Register(string name, string email, string password);
         public Task<User> Authenticate(string email, string password);
         public Task<User?> GetUserFromEmail(string value);
+        public Task VerifyEmail(User user);
     }
 }
