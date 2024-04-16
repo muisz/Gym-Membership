@@ -37,6 +37,8 @@ builder.Services.AddScoped<ITokenService, JWTService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
 builder.Services.AddScoped<IEmailClient, SMTPEmailClient>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddSingleton<MidtransPaymentClient>();
+builder.Services.AddKeyedSingleton<IPaymentService, MidtransVirtualAccountService>("Midtrans-Virtual-Account");
 
 var app = builder.Build();
 
