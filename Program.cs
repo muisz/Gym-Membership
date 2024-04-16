@@ -1,6 +1,8 @@
 using GymMembership.Models;
 using GymMembership.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +16,25 @@ builder.Services.AddDbContext<DatabaseContext>(
     options => options.UseNpgsql(builder.Configuration["Database:ConnectionString"])
 );
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = builder.Configuration["JWT:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:AccessKey"] ?? "")),
+            ValidateIssuer = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidateAudience = false,
+        };
+    });
+
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IOTPService, OTPService>();
 builder.Services.AddScoped<ITokenService, JWTService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
 builder.Services.AddScoped<IEmailClient, SMTPEmailClient>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
@@ -31,6 +48,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.MapControllers();
 
